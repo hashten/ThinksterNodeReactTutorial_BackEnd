@@ -11,8 +11,9 @@ router.get('/', function (req, res, next) {
         { $group: { _id: "$tagList", occ: { $sum: 1 } } },
         { $project: { _id: 0, tag: "$_id", occ: 1 } },
         { $sort: { occ: -1 } }
-    ], { cursor = {} }).exec(function (tags) {
-        return res.json({ tags: tags });
+    ]).then(function (tags) {
+        var tagarray = tags.map(function(el) { return el.tag});
+        return res.json({ tags: tagarray });
     }).catch(next);
     
     //Article.find().distinct('tagList').then(function (tags) {
