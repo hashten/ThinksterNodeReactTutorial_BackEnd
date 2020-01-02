@@ -12,13 +12,8 @@ router.get('/', function (req, res, next) {
         { $project: { _id: 0, tag: "$_id", occ: 1 } },
         { $sort: { occ: -1 } }
     ]).then(function (tags) {
-        var tagarray = tags.map(function(el) { return el.tag});
-        return res.json({ tags: tagarray });
+        return res.json({ tags: tags.map(function(el) { return el.tag}) });
     }).catch(next);
-    
-    //Article.find().distinct('tagList').then(function (tags) {
-    //    return res.json({ tags: tags });
-    //}).catch(next);
 });
 
 module.exports = router;
