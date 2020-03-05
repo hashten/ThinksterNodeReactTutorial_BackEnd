@@ -11,6 +11,7 @@ var fs = require('fs'),
     mongoose = require('mongoose'),
     obj = JSON.parse(fs.readFileSync('connectionData.json', 'utf8'));
 
+var connectionString = "mongodb://account:key@account.documents.azure.com:10255/?ssl=true";
 var isProduction = process.env.NODE_ENV === 'production';
 if(isProduction){
   var connectionString = obj.connectionString;
@@ -48,7 +49,7 @@ if (!isProduction) {
 if(isProduction){
   mongoose.connect(connectionString); //Can i specify process.env.MONGODB_URI from keyvault instead?
 } else {
-  mongoose.connect('mongodb://localhost/conduit');
+  mongoose.connect(connectionString);
   mongoose.set('debug', true);
 }
 
