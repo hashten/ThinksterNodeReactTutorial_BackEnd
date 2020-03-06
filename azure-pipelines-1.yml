@@ -12,10 +12,10 @@ variables:
   azureSubscription: 'b5bbd4d9-8024-4c51-a123-55b1c2878ad4'
   
   # Web app name
-  webAppName: 'joel-lab2-lab2'
+  webAppName: 'joel-lab2-webapp'
   
   # Environment name
-  environmentName: 'joel-lab2-lab2'
+  environmentName: 'joel-lab2-webapp'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
