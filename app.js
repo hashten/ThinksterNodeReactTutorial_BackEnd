@@ -8,10 +8,9 @@ var fs = require('fs'),
     cors = require('cors'),
     passport = require('passport'),
     errorhandler = require('errorhandler'),
-    mongoose = require('mongoose'),
-    obj = JSON.parse(fs.readFileSync('connectionData.json', 'utf8'));
+    mongoose = require('mongoose');
 
-var connectionString = "mongodb://account:key@account.documents.azure.com:10255/?ssl=true";
+var connectionString = "Could not read environment variable node_env";
 var isProduction = process.env.NODE_ENV === 'production';
 if(isProduction){
   var connectionString = process.env.CONNECTIONSTRING;
