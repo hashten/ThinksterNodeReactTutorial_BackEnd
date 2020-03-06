@@ -37,7 +37,7 @@ if (!isProduction) {
 }
 
 if(isProduction){
-  mongoose.connect(connectionString); //Can i specify process.env.MONGODB_URI from keyvault instead?
+  mongoose.connect(connectionString); 
 } else {
   mongoose.connect(connectionString);
   mongoose.set('debug', true);
@@ -60,7 +60,7 @@ app.use(function(req, res, next) {
 
 // development error handler
 // will print stacktrace
-if (!isProduction) {
+if (isProduction) {
   app.use(function(err, req, res, next) {
     console.log(err.stack);
 
@@ -75,13 +75,14 @@ if (!isProduction) {
 
 // production error handler
 // no stacktraces leaked to user
+/*
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.json({'errors': {
     message: err.message,
     error: {}
   }});
-});
+});*/
 
 // finally, let's start our server...
 var server = app.listen( process.env.PORT || 3000, function(){
