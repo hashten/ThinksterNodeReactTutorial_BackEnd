@@ -10,10 +10,14 @@ var fs = require('fs'),
     errorhandler = require('errorhandler'),
     mongoose = require('mongoose');
 
-var connectionString = "Could not read environment variable node_env";
+
 var isProduction = process.env.NODE_ENV === 'production';
 if(isProduction){
   var connectionString = process.env.CONNECTIONSTRING;
+}
+else
+{
+  var connectionString = "Environment variable not read!";
 }
 
 // Create global app object
@@ -37,7 +41,9 @@ if (!isProduction) {
 }
 
 if(isProduction){
-  mongoose.connect(connectionString); 
+  mongoose.connect(connectionString, function (err, client) {
+    mongoose.close();
+  }); 
 } else {
   mongoose.connect(connectionString);
   mongoose.set('debug', true);

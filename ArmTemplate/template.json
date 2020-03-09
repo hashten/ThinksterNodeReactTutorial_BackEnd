@@ -1,0 +1,768 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sites_joel_lab2_webapp_name": {
+            "defaultValue": "joel-lab2-webapp",
+            "type": "String"
+        },
+        "databaseAccounts_joel_lab2_name": {
+            "defaultValue": "joel-lab2",
+            "type": "String"
+        },
+        "storageAccounts_joellab2storage_name": {
+            "defaultValue": "joellab2storage",
+            "type": "String"
+        },
+        "serverfarms_ASP_joel_lab2_webapp_a891_name": {
+            "defaultValue": "ASP-joel-lab2-webapp-a891",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "2019-12-12",
+            "name": "[parameters('databaseAccounts_joel_lab2_name')]",
+            "location": "West US",
+            "tags": {
+                "defaultExperience": "Azure Cosmos DB for MongoDB API",
+                "hidden-cosmos-mmspecial": "",
+                "CosmosAccountType": "Non-Production"
+            },
+            "kind": "MongoDB",
+            "properties": {
+                "enableAutomaticFailover": false,
+                "enableMultipleWriteLocations": false,
+                "isVirtualNetworkFilterEnabled": false,
+                "virtualNetworkRules": [],
+                "disableKeyBasedMetadataWriteAccess": false,
+                "databaseAccountOfferType": "Standard",
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session",
+                    "maxIntervalInSeconds": 5,
+                    "maxStalenessPrefix": 100
+                },
+                "locations": [
+                    {
+                        "locationName": "West US",
+                        "provisioningState": "Succeeded",
+                        "failoverPriority": 0,
+                        "isZoneRedundant": false
+                    }
+                ],
+                "capabilities": [
+                    {
+                        "name": "EnableMongo"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[parameters('storageAccounts_joellab2storage_name')]",
+            "location": "centralus",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "name": "[parameters('serverfarms_ASP_joel_lab2_webapp_a891_name')]",
+            "location": "Central US",
+            "sku": {
+                "name": "B1",
+                "tier": "Basic",
+                "size": "B1",
+                "family": "B",
+                "capacity": 1
+            },
+            "kind": "linux",
+            "properties": {
+                "perSiteScaling": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "freeOfferExpirationTime": "2020-04-04T23:42:00.5533333",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/admin')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "admin"
+                },
+                "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/test')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "test"
+                },
+                "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_joellab2storage_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_joellab2storage_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_joellab2storage_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_joellab2storage_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('sites_joel_lab2_webapp_name')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_ASP_joel_lab2_webapp_a891_name'))]"
+            ],
+            "kind": "app,linux",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '.scm.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_ASP_joel_lab2_webapp_a891_name'))]",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": false,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false,
+                "redundancyMode": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/web')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "linuxFxVersion": "NODE|12-lts",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "remoteDebuggingVersion": "VS2019",
+                "httpLoggingEnabled": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$joel-lab2-webapp",
+                "scmType": "VSTSRM",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "appCommandLine": "npm run start",
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "ftpsState": "AllAllowed",
+                "reservedInstanceCount": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/268d099e6a2c4fe7ab2aeb35d4951bf1')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"deployment\",\"commitId\":\"7ddfdc0235fe28d260284d860394e4a6cb6558bc\",\"buildId\":\"43\",\"buildNumber\":\"20200306.8\",\"repoProvider\":\"GitHub\",\"repoName\":\"hashten/ThinksterNodeReactTutorial_BackEnd\",\"collectionUrl\":\"https://dev.azure.com/joehar/\",\"teamProject\":\"296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"buildProjectUrl\":\"https://dev.azure.com/joehar/296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"repositoryUrl\":\"https://github.com/hashten/ThinksterNodeReactTutorial_BackEnd\",\"branch\":\"00-seed\",\"teamProjectName\":\"joel-lab2\",\"slotName\":\"production\"}",
+                "start_time": "2020-03-06T09:58:14.386043Z",
+                "end_time": "2020-03-06T09:58:15.1467298Z",
+                "active": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/281583452705501')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author": "Joel Harsten",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"Deployment\",\"commitId\":\"de908b0228056564c599715cf291e3bacdc206f0\",\"buildId\":\"28\",\"buildNumber\":\"20200305.4\",\"repoProvider\":\"GitHub\",\"repoName\":\"hashten/ThinksterNodeReactTutorial_BackEnd\",\"collectionUrl\":\"https://dev.azure.com/joehar/\",\"teamProject\":\"296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"buildProjectUrl\":\"https://dev.azure.com/joehar/296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"repositoryUrl\":\"https://github.com/hashten/ThinksterNodeReactTutorial_BackEnd\",\"branch\":\"00-seed\",\"teamProjectName\":\"joel-lab2\",\"slotName\":\"production\"}",
+                "start_time": "2020-03-05T23:58:26.0350385Z",
+                "end_time": "2020-03-05T23:58:26.0350385Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/291583453293909')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author": "Joel Harsten",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"Deployment\",\"commitId\":\"de908b0228056564c599715cf291e3bacdc206f0\",\"buildId\":\"29\",\"buildNumber\":\"20200306.1\",\"repoProvider\":\"GitHub\",\"repoName\":\"hashten/ThinksterNodeReactTutorial_BackEnd\",\"collectionUrl\":\"https://dev.azure.com/joehar/\",\"teamProject\":\"296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"buildProjectUrl\":\"https://dev.azure.com/joehar/296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"repositoryUrl\":\"https://github.com/hashten/ThinksterNodeReactTutorial_BackEnd\",\"branch\":\"00-seed\",\"teamProjectName\":\"joel-lab2\",\"slotName\":\"production\"}",
+                "start_time": "2020-03-06T00:08:14.4471005Z",
+                "end_time": "2020-03-06T00:08:14.4471005Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/351583454326583')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author": "Joel Harsten",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"Deployment\",\"commitId\":\"e3c6460081906f63d884d3f052119d97a1ebcba1\",\"buildId\":\"35\",\"buildNumber\":\"20200306.4\",\"repoProvider\":\"GitHub\",\"repoName\":\"hashten/ThinksterNodeReactTutorial_BackEnd\",\"collectionUrl\":\"https://dev.azure.com/joehar/\",\"teamProject\":\"296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"buildProjectUrl\":\"https://dev.azure.com/joehar/296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"repositoryUrl\":\"https://github.com/hashten/ThinksterNodeReactTutorial_BackEnd\",\"branch\":\"00-seed\",\"teamProjectName\":\"joel-lab2\",\"slotName\":\"production\"}",
+                "start_time": "2020-03-06T00:25:26.9501803Z",
+                "end_time": "2020-03-06T00:25:26.9501803Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/40f2981ca82d4f4ea8b1fe00f5661526')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "VSTS_ZIP_DEPLOY",
+                "message": "Created via a push deployment",
+                "start_time": "2020-03-06T00:25:11.4659238Z",
+                "end_time": "2020-03-06T00:25:22.7492803Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/55733c43ea0b4903a6e43eee70d35125')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"deployment\",\"commitId\":\"6cadcbc48e280b1fd05d28b7e66b327bdc5ceae8\",\"buildId\":\"41\",\"buildNumber\":\"20200306.7\",\"repoProvider\":\"GitHub\",\"repoName\":\"hashten/ThinksterNodeReactTutorial_BackEnd\",\"collectionUrl\":\"https://dev.azure.com/joehar/\",\"teamProject\":\"296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"buildProjectUrl\":\"https://dev.azure.com/joehar/296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"repositoryUrl\":\"https://github.com/hashten/ThinksterNodeReactTutorial_BackEnd\",\"branch\":\"00-seed\",\"teamProjectName\":\"joel-lab2\",\"slotName\":\"production\"}",
+                "start_time": "2020-03-06T02:15:07.0028267Z",
+                "end_time": "2020-03-06T02:15:07.6237129Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/7dd89b6044044de18556fad09b103dac')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "VSTS_ZIP_DEPLOY",
+                "message": "Created via a push deployment",
+                "start_time": "2020-03-06T00:08:01.5903993Z",
+                "end_time": "2020-03-06T00:08:08.5787703Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/bc04a417f3124092b4d2ee34923292cf')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"deployment\",\"commitId\":\"6cadcbc48e280b1fd05d28b7e66b327bdc5ceae8\",\"buildId\":\"40\",\"buildNumber\":\"20200306.6\",\"repoProvider\":\"GitHub\",\"repoName\":\"hashten/ThinksterNodeReactTutorial_BackEnd\",\"collectionUrl\":\"https://dev.azure.com/joehar/\",\"teamProject\":\"296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"buildProjectUrl\":\"https://dev.azure.com/joehar/296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"repositoryUrl\":\"https://github.com/hashten/ThinksterNodeReactTutorial_BackEnd\",\"branch\":\"00-seed\",\"teamProjectName\":\"joel-lab2\",\"slotName\":\"production\"}",
+                "start_time": "2020-03-06T01:35:07.516614Z",
+                "end_time": "2020-03-06T01:35:08.2239277Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/e7192d7524a5438f8ef5a282144f8835')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"deployment\",\"commitId\":\"253e0d4d10419f214a23d7b30e3bcd038b0997d2\",\"buildId\":\"38\",\"buildNumber\":\"20200306.5\",\"repoProvider\":\"GitHub\",\"repoName\":\"hashten/ThinksterNodeReactTutorial_BackEnd\",\"collectionUrl\":\"https://dev.azure.com/joehar/\",\"teamProject\":\"296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"buildProjectUrl\":\"https://dev.azure.com/joehar/296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"repositoryUrl\":\"https://github.com/hashten/ThinksterNodeReactTutorial_BackEnd\",\"branch\":\"00-seed\",\"teamProjectName\":\"joel-lab2\",\"slotName\":\"production\"}",
+                "start_time": "2020-03-06T01:14:27.0485494Z",
+                "end_time": "2020-03-06T01:14:43.7017682Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/e9a5b38e5b2f448fbf4f3883ac288210')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "VSTS",
+                "message": "{\"type\":\"deployment\",\"commitId\":\"253e0d4d10419f214a23d7b30e3bcd038b0997d2\",\"buildId\":\"38\",\"buildNumber\":\"20200306.5\",\"repoProvider\":\"GitHub\",\"repoName\":\"hashten/ThinksterNodeReactTutorial_BackEnd\",\"collectionUrl\":\"https://dev.azure.com/joehar/\",\"teamProject\":\"296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"buildProjectUrl\":\"https://dev.azure.com/joehar/296b8fa3-0a6b-4900-bbb4-7ac16195ab0c\",\"repositoryUrl\":\"https://github.com/hashten/ThinksterNodeReactTutorial_BackEnd\",\"branch\":\"00-seed\",\"teamProjectName\":\"joel-lab2\",\"slotName\":\"production\"}",
+                "start_time": "2020-03-06T01:17:21.9068795Z",
+                "end_time": "2020-03-06T01:17:22.6467808Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(parameters('sites_joel_lab2_webapp_name'), '/', parameters('sites_joel_lab2_webapp_name'), '.azurewebsites.net')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_joel_lab2_webapp_name'))]"
+            ],
+            "properties": {
+                "siteName": "joel-lab2-webapp",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/admin/articles')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'admin')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "articles",
+                    "indexes": [
+                        {
+                            "key": {
+                                "keys": [
+                                    "_id"
+                                ]
+                            },
+                            "options": {}
+                        },
+                        {
+                            "key": {
+                                "keys": [
+                                    "slug"
+                                ]
+                            },
+                            "options": {
+                                "unique": true
+                            }
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/test/articles')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'test')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "articles",
+                    "indexes": [
+                        {
+                            "key": {
+                                "keys": [
+                                    "_id"
+                                ]
+                            },
+                            "options": {}
+                        },
+                        {
+                            "key": {
+                                "keys": [
+                                    "slug"
+                                ]
+                            },
+                            "options": {
+                                "unique": true
+                            }
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/test/series')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'test')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "series",
+                    "indexes": [
+                        {
+                            "key": {
+                                "keys": [
+                                    "_id"
+                                ]
+                            },
+                            "options": {}
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/admin/users')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'admin')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "users",
+                    "indexes": [
+                        {
+                            "key": {
+                                "keys": [
+                                    "_id"
+                                ]
+                            },
+                            "options": {}
+                        },
+                        {
+                            "key": {
+                                "keys": [
+                                    "username"
+                                ]
+                            },
+                            "options": {
+                                "unique": true
+                            }
+                        },
+                        {
+                            "key": {
+                                "keys": [
+                                    "email"
+                                ]
+                            },
+                            "options": {
+                                "unique": true
+                            }
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/test/users')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'test')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "users",
+                    "indexes": [
+                        {
+                            "key": {
+                                "keys": [
+                                    "_id"
+                                ]
+                            },
+                            "options": {}
+                        },
+                        {
+                            "key": {
+                                "keys": [
+                                    "email"
+                                ]
+                            },
+                            "options": {
+                                "unique": true
+                            }
+                        },
+                        {
+                            "key": {
+                                "keys": [
+                                    "username"
+                                ]
+                            },
+                            "options": {
+                                "unique": true
+                            }
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_joellab2storage_name'), '/default/$web')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_joellab2storage_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_joellab2storage_name'))]"
+            ],
+            "properties": {
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections/throughputSettings",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/admin/articles/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections', parameters('databaseAccounts_joel_lab2_name'), 'admin', 'articles')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'admin')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "throughput": 400
+                }
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections/throughputSettings",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/admin/users/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections', parameters('databaseAccounts_joel_lab2_name'), 'admin', 'users')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'admin')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "throughput": 400
+                }
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections/throughputSettings",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/test/articles/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections', parameters('databaseAccounts_joel_lab2_name'), 'test', 'articles')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'test')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "throughput": 400
+                }
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections/throughputSettings",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/test/series/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections', parameters('databaseAccounts_joel_lab2_name'), 'test', 'series')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'test')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "throughput": 400
+                }
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections/throughputSettings",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(parameters('databaseAccounts_joel_lab2_name'), '/test/users/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections', parameters('databaseAccounts_joel_lab2_name'), 'test', 'users')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('databaseAccounts_joel_lab2_name'), 'test')]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('databaseAccounts_joel_lab2_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "throughput": 400
+                }
+            }
+        }
+    ]
+}
